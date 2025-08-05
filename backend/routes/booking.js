@@ -206,3 +206,34 @@ router.post('/:id/payment', auth, async (req, res) => {
     res.status(500).json({ message: 'Fizetési hiba történt' });
   }
 });
+// ADMIN ROUTE-OK
+
+// Összes foglalás lekérése (admin)
+router.get('/admin/all', adminAuth, async (req, res) => {
+  try {
+    const { page = 1, limit = 20, status, apartment } = req.query;
+    
+    let query = {};
+    if (status) query.status = status;
+    if (apartment) query.apartment = apartment;
+
+    const bookings = await Booking.find(query)
+      .populate('user', 'name email phone')
+      .populate('apartment', 'title location')
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .sort({ createdAt: -1 });
+
+    const total = await Booking.countDocuments(query);
+
+    res.json({
+      bookings,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+      total
+    });
+  } catch (error) {
+    console.error('Admin foglalások lekérése hiba:', error);
+    res.status(500).json({ message: 'Szerver hiba' });
+  }
+});
