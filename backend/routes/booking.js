@@ -84,3 +84,16 @@ router.post('/', auth, async (req, res) => {
     res.status(500).json({ message: 'Szerver hiba' });
   }
 });
+// Felhasználó foglalásainak lekérése
+router.get('/my-bookings', auth, async (req, res) => {
+  try {
+    const bookings = await Booking.find({ user: req.user._id })
+      .populate('apartment', 'title location images')
+      .sort({ createdAt: -1 });
+
+    res.json({ bookings });
+  } catch (error) {
+    console.error('Foglalások lekérése hiba:', error);
+    res.status(500).json({ message: 'Szerver hiba' });
+  }
+});
