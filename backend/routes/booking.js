@@ -120,3 +120,45 @@ router.get('/:id', auth, async (req, res) => {
     res.status(500).json({ message: 'Szerver hiba' });
   }
 });
+// Foglalás lemondása
+router.put('/:id/cancel', auth, async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id);
+
+    if (!booking) {
+      return res.status(404).json({ message: 'Foglalás nem található' });
+    }
+
+    // Ellenőrizzük hogy a felhasználó jogosult-e lemondani
+    if (booking.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Nincs jogosultság' });
+    }
+
+    // Csak pending vagy confirmed foglalást lehet lemondani
+    if (!['pending', 'confirmed'].includes(booking.status)) {
+      return res.status(400).json({ message: 'Ez a foglalás nem mondható le' });
+    }
+
+    // Lemondási határidő ellenőrzése (pl. 48 órával korábban)
+    const now = new Date();
+    const checkInDate = new Date(booking.checkIn);
+    const hoursUntilCheckIn = (checkInDate - now) / (1000 * 60 * 60);
+
+    if (hoursUntilCheckIn < 48) {
+      return res.status(400).json({ 
+        message: 'A foglalás csak 48 órával a bejelentkezés előtt mondható le' 
+      });
+    }
+
+    booking.status = 'cancelled';
+    await booking.save();
+
+    res.json({
+      message: 'Foglalás sikeresen lemondva',
+      booking
+    });
+  } catch (error) {
+    console.error('Foglalás lemondás hiba:', error);
+    res.status(500).json({ message: 'Szerver hiba' });
+  }
+});
