@@ -265,3 +265,50 @@ router.put('/:id/status', adminAuth, async (req, res) => {
     res.status(500).json({ message: 'Szerver hiba' });
   }
 });
+// Foglalási statisztikák (admin)
+router.get('/admin/stats', adminAuth, async (req, res) => {
+  try {
+    const totalBookings = await Booking.countDocuments();
+    const confirmedBookings = await Booking.countDocuments({ status: 'confirmed' });
+    const pendingBookings = await Booking.countDocuments({ status: 'pending' });
+    const cancelledBookings = await Booking.countDocuments({ status: 'cancelled' });
+    
+    // Bevétel számítás
+    const revenue = await Booking.aggregate([
+      { $match: { paymentStatus: 'paid' } },
+      { $group: { _id: null, total: { $sum: '$totalPrice' } } }
+    ]);
+
+    // Havi foglalások
+    const monthlyBookings = await Booking.aggregate([
+      {
+        $group: {
+          _id: {
+            year: { $year: '$createdAt' },
+            month: { $month: '$createdAt' }
+          },
+          count: { $sum: 1 },
+          revenue: { $sum: { $cond: [{ $eq: ['$paymentStatus', 'paid'] }, '$totalPrice', 0] } }
+        }
+      },
+      { $sort: { '_id.year': -1, '_id.month': -1 } },
+      { $limit: 12 }
+    ]);
+
+    res.json({
+      stats: {
+        totalBookings,
+        confirmedBookings,
+        pendingBookings,
+        cancelledBookings,
+        totalRevenue: revenue[0]?.total || 0,
+        monthlyBookings
+      }
+    });
+  } catch (error) {
+    console.error('Statisztikák lekérése hiba:', error);
+    res.status(500).json({ message: 'Szerver hiba' });
+  }
+});
+
+module.exports = router;
