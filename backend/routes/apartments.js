@@ -47,3 +47,18 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Egy apartman lekérése (publikus)
+router.get('/:id', async (req, res) => {
+  try {
+    const apartment = await Apartment.findById(req.params.id);
+    
+    if (!apartment || !apartment.isActive) {
+      return res.status(404).json({ message: 'Apartman nem található' });
+    }
+
+    res.json(apartment);
+  } catch (error) {
+    console.error('Apartman lekérése hiba:', error);
+    res.status(500).json({ message: 'Szerver hiba' });
+  }
+});
