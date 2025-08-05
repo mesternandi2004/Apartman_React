@@ -237,3 +237,31 @@ router.get('/admin/all', adminAuth, async (req, res) => {
     res.status(500).json({ message: 'Szerver hiba' });
   }
 });
+// Foglalás státusz frissítése (admin)
+router.put('/:id/status', adminAuth, async (req, res) => {
+  try {
+    const { status } = req.body;
+    
+    if (!['pending', 'confirmed', 'cancelled', 'completed'].includes(status)) {
+      return res.status(400).json({ message: 'Érvénytelen státusz' });
+    }
+
+    const booking = await Booking.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    ).populate('user', 'name email').populate('apartment', 'title');
+
+    if (!booking) {
+      return res.status(404).json({ message: 'Foglalás nem található' });
+    }
+
+    res.json({
+      message: 'Foglalás státusza frissítve',
+      booking
+    });
+  } catch (error) {
+    console.error('Státusz frissítés hiba:', error);
+    res.status(500).json({ message: 'Szerver hiba' });
+  }
+});
