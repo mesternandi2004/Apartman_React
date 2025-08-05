@@ -201,3 +201,31 @@ router.delete('/:id', adminAuth, async (req, res) => {
     res.status(500).json({ message: 'Szerver hiba' });
   }
 });
+
+// Admin: összes apartman lekérése (inaktívakkal együtt)
+router.get('/admin/all', adminAuth, async (req, res) => {
+  try {
+    const { page = 1, limit = 10 } = req.query;
+    
+    const apartments = await Apartment.find()
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .sort({ createdAt: -1 })
+      .populate('bookings')
+      .exec();
+
+    const total = await Apartment.countDocuments();
+
+    res.json({
+      apartments,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+      total
+    });
+  } catch (error) {
+    console.error('Admin apartmanok lekérése hiba:', error);
+    res.status(500).json({ message: 'Szerver hiba' });
+  }
+});
+
+module.exports = router;
