@@ -129,3 +129,20 @@ router.get('/:id/booked-dates', async (req, res) => {
     res.status(500).json({ message: 'Szerver hiba' });
   }
 });
+
+// Új apartman létrehozása (csak admin)
+router.post('/', adminAuth, async (req, res) => {
+  try {
+    const apartmentData = req.body;
+    const apartment = new Apartment(apartmentData);
+    await apartment.save();
+
+    res.status(201).json({
+      message: 'Apartman sikeresen létrehozva',
+      apartment
+    });
+  } catch (error) {
+    console.error('Apartman létrehozás hiba:', error);
+    res.status(500).json({ message: 'Szerver hiba' });
+  }
+});
