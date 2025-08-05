@@ -28,3 +28,59 @@ router.post('/', auth, async (req, res) => {
     if (checkInDate < new Date()) {
       return res.status(400).json({ message: 'A bejelentkezés dátuma nem lehet múltbeli' });
     }
+    // Vendégszám ellenőrzése
+    if (guests > apartment.maxGuests) {
+      return res.status(400).json({ 
+        message: `Maximum ${apartment.maxGuests} vendég foglalható` 
+      });
+    }
+
+    // Elérhetőség ellenőrzése
+    const existingBookings = await Booking.find({
+      apartment: apartmentId,
+      status: { $in: ['confirmed', 'pending'] },
+      $or: [
+        { checkIn: { $lte: checkInDate }, checkOut: { $gt: checkInDate } },
+        { checkIn: { $lt: checkOutDate }, checkOut: { $gte: checkOutDate } },
+        { checkIn: { $gte: checkInDate }, checkOut: { $lte: checkOutDate } }
+      ]
+    });
+
+    if (existingBookings.length > 0) {
+      return res.status(400).json({ message: 'Az apartman már foglalt ebben az időszakban' });
+    }
+
+    // Ár számítás
+    const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+    const totalPrice = nights * apartment.price;
+
+    // Foglalás létrehozása
+    const booking = new Booking({
+      user: req.user._id,
+      apartment: apartmentId,
+      checkIn: checkInDate,
+      checkOut: checkOutDate,
+      guests,
+      totalPrice,
+      specialRequests,
+      contactInfo: {
+        name: req.user.name,
+        email: req.user.email,
+        phone: req.user.phone
+      }
+    });
+
+    await booking.save();
+
+    // Populálás a válaszhoz
+    await booking.populate('apartment', 'title location images');
+
+    res.status(201).json({
+      message: 'Foglalás sikeresen létrehozva',
+      booking
+    });
+  } catch (error) {
+    console.error('Foglalás létrehozás hiba:', error);
+    res.status(500).json({ message: 'Szerver hiba' });
+  }
+});
