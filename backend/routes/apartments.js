@@ -62,3 +62,47 @@ router.get('/:id', async (req, res) => {
     res.status(500).json({ message: 'Szerver hiba' });
   }
 });
+
+// Apartman elérhetőségének ellenőrzése
+router.post('/:id/check-availability', async (req, res) => {
+  try {
+    const { checkIn, checkOut } = req.body;
+    const apartmentId = req.params.id;
+
+    // Dátum validálás
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+    
+    if (checkInDate >= checkOutDate) {
+      return res.status(400).json({ message: 'A kijelentkezés dátuma későbbi kell legyen' });
+    }
+    
+    if (checkInDate < new Date()) {
+      return res.status(400).json({ message: 'A bejelentkezés dátuma nem lehet múltbeli' });
+    }
+
+    // Foglaltság ellenőrzése
+    const existingBookings = await Booking.find({
+      apartment: apartmentId,
+      status: { $in: ['confirmed', 'pending'] },
+      $or: [
+        { checkIn: { $lte: checkInDate }, checkOut: { $gt: checkInDate } },
+        { checkIn: { $lt: checkOutDate }, checkOut: { $gte: checkOutDate } },
+        { checkIn: { $gte: checkInDate }, checkOut: { $lte: checkOutDate } }
+      ]
+    });
+
+    const isAvailable = existingBookings.length === 0;
+
+    res.json({
+      available: isAvailable,
+      conflictingDates: existingBookings.map(booking => ({
+        checkIn: booking.checkIn,
+        checkOut: booking.checkOut
+      }))
+    });
+  } catch (error) {
+    console.error('Elérhetőség ellenőrzés hiba:', error);
+    res.status(500).json({ message: 'Szerver hiba' });
+  }
+});
