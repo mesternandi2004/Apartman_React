@@ -147,7 +147,7 @@ router.post('/', adminAuth, async (req, res) => {
   }
 });
 
-/ Apartman frissítése (csak admin)
+// Apartman frissítése (csak admin)
 router.put('/:id', adminAuth, async (req, res) => {
   try {
     const apartment = await Apartment.findByIdAndUpdate(
