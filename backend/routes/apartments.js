@@ -178,3 +178,26 @@ router.delete('/:id', adminAuth, async (req, res) => {
     if (!apartment) {
       return res.status(404).json({ message: 'Apartman nem található' });
     }
+// Ellenőrizzük hogy vannak-e aktív foglalások
+    const activeBookings = await Booking.find({
+      apartment: req.params.id,
+      status: { $in: ['confirmed', 'pending'] },
+      checkOut: { $gte: new Date() }
+    });
+
+    if (activeBookings.length > 0) {
+      return res.status(400).json({ 
+        message: 'Nem törölhető az apartman, mert vannak aktív foglalások' 
+      });
+    }
+
+    // Soft delete - csak inaktiválás
+    apartment.isActive = false;
+    await apartment.save();
+
+    res.json({ message: 'Apartman sikeresen törölve' });
+  } catch (error) {
+    console.error('Apartman törlés hiba:', error);
+    res.status(500).json({ message: 'Szerver hiba' });
+  }
+});
