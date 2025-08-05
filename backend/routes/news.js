@@ -36,3 +36,19 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Egy hír lekérése (publikus)
+router.get('/:id', async (req, res) => {
+  try {
+    const newsItem = await News.findById(req.params.id)
+      .populate('author', 'name');
+    
+    if (!newsItem || !newsItem.isPublished) {
+      return res.status(404).json({ message: 'Hír nem található' });
+    }
+
+    res.json({ news: newsItem });
+  } catch (error) {
+    console.error('Hír lekérése hiba:', error);
+    res.status(500).json({ message: 'Szerver hiba' });
+  }
+});
