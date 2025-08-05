@@ -52,3 +52,20 @@ router.get('/:id', async (req, res) => {
     res.status(500).json({ message: 'Szerver hiba' });
   }
 });
+// Legutóbbi hírek (publikus - főoldalhoz)
+router.get('/latest/:count', async (req, res) => {
+  try {
+    const count = parseInt(req.params.count) || 5;
+    
+    const news = await News.find({ isPublished: true })
+      .populate('author', 'name')
+      .sort({ publishedAt: -1 })
+      .limit(count)
+      .select('title excerpt image publishedAt author');
+
+    res.json({ news });
+  } catch (error) {
+    console.error('Legutóbbi hírek lekérése hiba:', error);
+    res.status(500).json({ message: 'Szerver hiba' });
+  }
+});
