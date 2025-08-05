@@ -106,3 +106,26 @@ router.post('/:id/check-availability', async (req, res) => {
     res.status(500).json({ message: 'Szerver hiba' });
   }
 });
+
+// Foglalt dátumok lekérése apartmanhoz
+router.get('/:id/booked-dates', async (req, res) => {
+  try {
+    const apartmentId = req.params.id;
+    
+    const bookings = await Booking.find({
+      apartment: apartmentId,
+      status: { $in: ['confirmed', 'pending'] },
+      checkOut: { $gte: new Date() }
+    }).select('checkIn checkOut');
+
+    const bookedDates = bookings.map(booking => ({
+      start: booking.checkIn,
+      end: booking.checkOut
+    }));
+
+    res.json({ bookedDates });
+  } catch (error) {
+    console.error('Foglalt dátumok lekérése hiba:', error);
+    res.status(500).json({ message: 'Szerver hiba' });
+  }
+});
