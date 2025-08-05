@@ -146,3 +146,35 @@ router.post('/', adminAuth, async (req, res) => {
     res.status(500).json({ message: 'Szerver hiba' });
   }
 });
+
+/ Apartman frissítése (csak admin)
+router.put('/:id', adminAuth, async (req, res) => {
+  try {
+    const apartment = await Apartment.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    if (!apartment) {
+      return res.status(404).json({ message: 'Apartman nem található' });
+    }
+
+    res.json({
+      message: 'Apartman sikeresen frissítve',
+      apartment
+    });
+  } catch (error) {
+    console.error('Apartman frissítés hiba:', error);
+    res.status(500).json({ message: 'Szerver hiba' });
+  }
+});
+
+// Apartman törlése (csak admin)
+router.delete('/:id', adminAuth, async (req, res) => {
+  try {
+    const apartment = await Apartment.findById(req.params.id);
+    
+    if (!apartment) {
+      return res.status(404).json({ message: 'Apartman nem található' });
+    }
