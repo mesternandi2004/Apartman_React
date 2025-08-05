@@ -97,3 +97,26 @@ router.get('/my-bookings', auth, async (req, res) => {
     res.status(500).json({ message: 'Szerver hiba' });
   }
 });
+
+// Egy foglalás részleteinek lekérése
+router.get('/:id', auth, async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id)
+      .populate('apartment')
+      .populate('user', 'name email phone');
+
+    if (!booking) {
+      return res.status(404).json({ message: 'Foglalás nem található' });
+    }
+
+    // Ellenőrizzük hogy a felhasználó jogosult-e megtekinteni
+    if (booking.user._id.toString() !== req.user._id.toString() && !req.user.isAdmin) {
+      return res.status(403).json({ message: 'Nincs jogosultság' });
+    }
+
+    res.json({ booking });
+  } catch (error) {
+    console.error('Foglalás lekérése hiba:', error);
+    res.status(500).json({ message: 'Szerver hiba' });
+  }
+});
