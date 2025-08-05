@@ -162,3 +162,47 @@ router.put('/:id/cancel', auth, async (req, res) => {
     res.status(500).json({ message: 'Szerver hiba' });
   }
 });
+// Fizetés szimuláció (valós fizetési gateway helyett)
+router.post('/:id/payment', auth, async (req, res) => {
+  try {
+    const { paymentMethod, cardDetails } = req.body;
+    const booking = await Booking.findById(req.params.id);
+
+    if (!booking) {
+      return res.status(404).json({ message: 'Foglalás nem található' });
+    }
+
+    if (booking.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Nincs jogosultság' });
+    }
+
+    if (booking.paymentStatus === 'paid') {
+      return res.status(400).json({ message: 'A foglalás már ki van fizetve' });
+    }
+
+    // Itt egy valós alkalmazásban integrálnánk a fizetési gateway-t
+    // Most csak szimulálunk egy sikeres fizetést
+    
+    // Szimuláljunk egy tranzakciós ID-t
+    const transactionId = 'txn_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+    booking.paymentStatus = 'paid';
+    booking.status = 'confirmed';
+    booking.paymentDetails = {
+      transactionId,
+      paymentMethod,
+      paidAt: new Date()
+    };
+
+    await booking.save();
+
+    res.json({
+      message: 'Fizetés sikeres',
+      booking,
+      transactionId
+    });
+  } catch (error) {
+    console.error('Fizetés hiba:', error);
+    res.status(500).json({ message: 'Fizetési hiba történt' });
+  }
+});
