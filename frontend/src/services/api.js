@@ -58,3 +58,17 @@ export const apartmentsAPI = {
   delete: (id) => api.delete(`/apartments/${id}`),
   getAllAdmin: (params = {}) => api.get('/apartments/admin/all', { params }),
 };
+
+// BOOKINGS API
+export const bookingsAPI = {
+  create: (bookingData) => api.post('/bookings', bookingData),
+  getMyBookings: () => api.get('/bookings/my-bookings'),
+  getById: (id) => api.get(`/bookings/${id}`),
+  cancel: (id) => api.put(`/bookings/${id}/cancel`),
+  processPayment: (id, paymentData) => api.post(`/bookings/${id}/payment`, paymentData),
+  
+  // Admin endpoints
+  getAllAdmin: (params = {}) => api.get('/bookings/admin/all', { params }),
+  updateStatus: (id, status) => api.put(`/bookings/${id}/status`, { status }),
+  getStats: () => api.get('/bookings/admin/stats'),
+};
