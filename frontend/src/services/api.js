@@ -24,3 +24,25 @@ api.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+// Response interceptor - error handling
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token expired or invalid
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/sign-in';
+    }
+    return Promise.reject(error);
+  }
+);
+
+// AUTH API
+export const authAPI = {
+  register: (userData) => api.post('/auth/register', userData),
+  login: (credentials) => api.post('/auth/login', credentials),
+  getProfile: () => api.get('/auth/profile'),
+  updateProfile: (userData) => api.put('/auth/profile', userData),
+  validateToken: () => api.get('/auth/validate'),
+};
