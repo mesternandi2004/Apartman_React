@@ -85,3 +85,19 @@ export const newsAPI = {
   getAllAdmin: (params = {}) => api.get('/news/admin/all', { params }),
   togglePublish: (id) => api.put(`/news/${id}/toggle-publish`),
 };
+
+// Utility functions
+export const handleApiError = (error) => {
+  if (error.response) {
+    // Server responded with error status
+    return error.response.data.message || 'Hiba történt a szerveren';
+  } else if (error.request) {
+    // Request was made but no response received
+    return 'Nem sikerült kapcsolódni a szerverhez';
+  } else {
+    // Something else happened
+    return 'Váratlan hiba történt';
+  }
+};
+
+export default api;
