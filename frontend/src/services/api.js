@@ -46,3 +46,15 @@ export const authAPI = {
   updateProfile: (userData) => api.put('/auth/profile', userData),
   validateToken: () => api.get('/auth/validate'),
 };
+// APARTMENTS API
+export const apartmentsAPI = {
+  getAll: (params = {}) => api.get('/apartments', { params }),
+  getById: (id) => api.get(`/apartments/${id}`),
+  checkAvailability: (id, dates) => api.post(`/apartments/${id}/check-availability`, dates),
+  getBookedDates: (id) => api.get(`/apartments/${id}/booked-dates`),
+  // Admin endpoints
+  create: (apartmentData) => api.post('/apartments', apartmentData),
+  update: (id, apartmentData) => api.put(`/apartments/${id}`, apartmentData),
+  delete: (id) => api.delete(`/apartments/${id}`),
+  getAllAdmin: (params = {}) => api.get('/apartments/admin/all', { params }),
+};
