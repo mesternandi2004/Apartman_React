@@ -72,3 +72,16 @@ export const bookingsAPI = {
   updateStatus: (id, status) => api.put(`/bookings/${id}/status`, { status }),
   getStats: () => api.get('/bookings/admin/stats'),
 };
+// NEWS API
+export const newsAPI = {
+  getAll: (params = {}) => api.get('/news', { params }),
+  getById: (id) => api.get(`/news/${id}`),
+  getLatest: (count = 5) => api.get(`/news/latest/${count}`),
+  
+  // Admin endpoints
+  create: (newsData) => api.post('/news', newsData),
+  update: (id, newsData) => api.put(`/news/${id}`, newsData),
+  delete: (id) => api.delete(`/news/${id}`),
+  getAllAdmin: (params = {}) => api.get('/news/admin/all', { params }),
+  togglePublish: (id) => api.put(`/news/${id}/toggle-publish`),
+};
