@@ -1,97 +1,9 @@
 // frontend/src/contexts/AuthContext.jsx
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useReducer, useEffect } from 'react';
 import { authAPI, handleApiError } from '../services/api';
+import { AuthActionTypes, initialState, authReducer } from './authTypes';
 
 const AuthContext = createContext();
-
-// Initial state
-const initialState = {
-  user: null,
-  token: localStorage.getItem('token'),
-  loading: true,
-  error: null,
-};
-
-// Action types
-const AuthActionTypes = {
-  LOGIN_START: 'LOGIN_START',
-  LOGIN_SUCCESS: 'LOGIN_SUCCESS',
-  LOGIN_FAILURE: 'LOGIN_FAILURE',
-  LOGOUT: 'LOGOUT',
-  REGISTER_START: 'REGISTER_START',
-  REGISTER_SUCCESS: 'REGISTER_SUCCESS',
-  REGISTER_FAILURE: 'REGISTER_FAILURE',
-  LOAD_USER_START: 'LOAD_USER_START',
-  LOAD_USER_SUCCESS: 'LOAD_USER_SUCCESS',
-  LOAD_USER_FAILURE: 'LOAD_USER_FAILURE',
-  UPDATE_PROFILE_SUCCESS: 'UPDATE_PROFILE_SUCCESS',
-  CLEAR_ERROR: 'CLEAR_ERROR',
-};
-
-// Reducer
-const authReducer = (state, action) => {
-  switch (action.type) {
-    case AuthActionTypes.LOGIN_START:
-    case AuthActionTypes.REGISTER_START:
-    case AuthActionTypes.LOAD_USER_START:
-      return {
-        ...state,
-        loading: true,
-        error: null,
-      };
-
-    case AuthActionTypes.LOGIN_SUCCESS:
-    case AuthActionTypes.REGISTER_SUCCESS:
-      localStorage.setItem('token', action.payload.token);
-      localStorage.setItem('user', JSON.stringify(action.payload.user));
-      return {
-        ...state,
-        user: action.payload.user,
-        token: action.payload.token,
-        loading: false,
-        error: null,
-      };
-
-    case AuthActionTypes.LOAD_USER_SUCCESS:
-    case AuthActionTypes.UPDATE_PROFILE_SUCCESS:
-      localStorage.setItem('user', JSON.stringify(action.payload));
-      return {
-        ...state,
-        user: action.payload,
-        loading: false,
-        error: null,
-      };
-
-    case AuthActionTypes.LOGIN_FAILURE:
-    case AuthActionTypes.REGISTER_FAILURE:
-    case AuthActionTypes.LOAD_USER_FAILURE:
-      return {
-        ...state,
-        loading: false,
-        error: action.payload,
-      };
-
-    case AuthActionTypes.LOGOUT:
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      return {
-        ...state,
-        user: null,
-        token: null,
-        loading: false,
-        error: null,
-      };
-
-    case AuthActionTypes.CLEAR_ERROR:
-      return {
-        ...state,
-        error: null,
-      };
-
-    default:
-      return state;
-  }
-};
 
 // Auth Provider Component
 export const AuthProvider = ({ children }) => {
@@ -242,13 +154,4 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// Custom hook to use auth context
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-
-export default AuthContext;
+export default AuthProvider;
